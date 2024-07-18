@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_csv("mxmh_survey_results.csv")
+df = pd.read_csv("dataset.csv")
 df.head()
 df.info()
 import numpy as np
