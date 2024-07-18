@@ -1,375 +1,255 @@
-import pandas as pd
+## 1. Prepare
+### 1.1 Installing Packages
 
-df = pd.read_csv("dataset.csv")
-df.head()
-df.info()
-import numpy as np
+install.packages("rlang")
 
-df.hist(['Age'], bins=30, color='mediumaquamarine', grid=False)
+install.packages("ggplot2")
 
-df['Age'].value_counts().loc[lambda x : x>50]
-df['Age'].max()
+install.packages("scales")
 
-import matplotlib.pyplot as plt
+install.packages("readxl")
 
-s_colors = ['lightgreen', 'lightcoral', 'steelblue', 'palevioletred', 'gold', 'darkturquoise']
+install.packages("xlsx")
 
-services = df['Primary streaming service'].value_counts()
-services.plot(kind='pie', colors = s_colors)
+install.packages("tidyr")
 
-plt.title('Streaming services by popularity')
-plt.ylabel("")
+install.packages("dplyr")
 
-df['Primary streaming service'].value_counts(normalize=True)
+install.packages("forcats")
 
-import seaborn as sns
+install.packages("reshape2")
 
-s_colors2 = ['lightgreen', 'darkturquoise', 'lightcoral', 'steelblue', 'palevioletred', 'gold']
+install.packages("viridis")
 
-df.replace(['Other streaming service', 'I do not use a streaming service.', 'YouTube Music'],
-                       ['Other', 'None', 'YouTube'], inplace=True)
+install.packages("stringr")
 
-bplot = sns.boxplot(data=df, x="Primary streaming service", y = "Age",
-            showfliers = False,
-            palette = s_colors2)
+library(ggplot2) #data visualization
 
-plt.title('Streaming services by Age')
+library(scales) #data transformation
 
-# %% [code] {"tags":[],"cell_id":"54869a36a7194c8180a68eccfaa45582","source_hash":"9a5b594","execution_start":1671339342990,"execution_millis":2,"deepnote_table_state":{"sortBy":[],"filters":[],"pageSize":10,"pageIndex":1},"deepnote_table_loading":false,"deepnote_to_be_reexecuted":false,"deepnote_cell_type":"code"}
-s_df = df.groupby(['Primary streaming service'])
-s_ages = []
-s_ages.append(s_df['Age'].median())
+library(readxl) #read Excel files
 
-s_ages
-df.hist(['Hours per day'], bins='auto', density=True, color = 'slateblue', grid=False)
+library(xlsx) #Excel I/O operations
 
-# %% [code] {"tags":[],"cell_id":"7face6c3a08742fd98ca894d8c508ff3","source_hash":"eaf85e07","execution_start":1671339343337,"execution_millis":6657194,"deepnote_to_be_reexecuted":false,"deepnote_cell_type":"code"}
-df['Hours per day'].value_counts().loc[lambda x : x>100]
-fig = plt.figure(figsize=(6,2))
+library(tidyr) #data wrangling
 
-plt.suptitle("Musical background")
+library(dplyr) #data manipulation
 
-ax = fig.add_subplot(121)
+library(forcats) #categorical data operations
 
-inst = df['Instrumentalist'].value_counts()
-inst.plot(kind='pie', colors = ["indianred", "darkblue"], labeldistance = 1.2)
+library(reshape2) #data reshaping
 
-ax = fig.add_subplot(122)
+library(viridis) #color palettes
 
-comp = df['Composer'].value_counts()
-comp.plot(kind='pie', colors = ["indianred", "darkblue"], labeldistance = 1.2)
-df.replace(['No', 'Yes'],
+library(stringr) #string manipulation
+```
 
-labels = ['Anxiety', 'Depression','Insomnia', 'OCD']
-x = np.arange(len(labels))
-width = 0.15
+df <- read.csv("../input/social-media-impact-on-mental-health-in-india/df.csv")
+df2 <- read.csv("../input/social-media-impact-on-mental-health-in-india/df2.csv")
+df3 <- read.csv("../input/social-media-impact-on-mental-health-in-india/df3.csv")
+df4 <- read.csv("../input/social-media-impact-on-mental-health-in-india/df4.csv")
+df5 <- read.csv("../input/social-media-impact-on-mental-health-in-india/df5.csv")
+df6 <- read.csv("../input/social-media-impact-on-mental-health-in-india/df6.csv")
+df7 <- read.csv("../input/social-media-impact-on-mental-health-in-india/df7.csv")
+df_long <- read.csv("../input/social-media-impact-on-mental-health-in-india/df_long.csv")
+df_sorted <- read.csv("../input/social-media-impact-on-mental-health-in-india/df_sorted.csv")
+avg_time_spent_worldwide <- read.csv("../input/social-media-impact-on-mental-health-in-india/avg_time_spent_worldwide.csv")
+age_data_long <- read.csv("../input/social-media-impact-on-mental-health-in-india/age_data_long.csv")
 
-fig, ax = plt.subplots(figsize=(10, 5))
+global_avg <- df_sorted %>% filter(region == "Global Average") %>% pull(users)
 
-b1 = ax.bar(x-2*width, df[(df.Instrumentalist == 0)].median()[-4:], width, color = 'indianred', label = "Non Instrumentalist")
-b2 = ax.bar(x-width, df[(df.Instrumentalist == 1)].median()[-4:], width, color = 'darkred', label = "Instrumentalist")
-b3 = ax.bar(x, df[(df.Composer == 0)].median()[-4:], width, color = 'cornflowerblue', label = "Non Composer")
-b4 = ax.bar(x+width, df[(df.Composer == 1)].median()[-4:], width, color = 'darkblue', label = "Composer")
 
-ax.set_ylim([0, 8])
-ax.set_ylabel('Ranking')
-ax.set_title('Mental health ranking distribution')
-ax.set_xticks(x, labels)
-ax.legend()
 
-plt.show()
+### 2.1 User Count Worldwide
 
-# %% [markdown] {"tags":[],"cell_id":"fb91a4b0c5b746058b85df97ca4b7941","is_collapsed":false,"formattedRanges":[],"deepnote_cell_type":"text-cell-p"}
-# Instrumentalists and composers have slightly higher MH rankings. However, OCD rankings are low regardless of musical background.
+ggplot(df_sorted %>% mutate(highlight = ifelse(region == "Global Average", "Global Average", "")), 
+       aes(x = fct_reorder(region, users), y = users, fill = highlight)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("gray80", "red")) + # Highlight global average row in red
+  geom_hline(yintercept = global_avg, color = "red", linetype = "dashed", 
+             size = 1) + # Add horizontal line for global average
+  geom_text(aes(label = users_percent), 
+            position = position_stack(vjust = 0.5), # Stack labels on top of bars
+            size = 3, 
+            color = "white") + # Add percentage labels
+  coord_flip() +
+  labs(title = "Social Media Users vs. Total Population - Oct 2022",
+       subtitle = "Active Social Media Users As A Percentage of The Total Population", 
+       x = "", y = "Percent Users",
+       caption = "Data Source: DataReportal\nHootsuite") +
+  theme_minimal() +
+  guides(fill=FALSE) + # Remove legend
+  theme(plot.title = element_text(size = 18, hjust = 0.5),
+        plot.subtitle = element_text(size = 12, hjust = 0.5),
+        plot.margin = unit(c(1, 2, 1, 1), "cm")) # Adjust plot margin to make it wider
 
-# %% [code] {"tags":[],"cell_id":"a815ae34225a49aea851470e25a8af8a","source_hash":"ee1e4802","execution_start":1671339343683,"execution_millis":382,"deepnote_to_be_reexecuted":false,"deepnote_cell_type":"code"}
-corr_m = df.corr()
-corr_m1 = corr_m.iloc[:-5 , :-5]
 
-mask = np.triu(corr_m1)
+### 2.2 Countries by Internet Users
 
-sns.heatmap(corr_m1, annot=True, mask=mask, cmap = 'YlOrRd')
-plt.show()
-m_all = ["Anxiety", "Depression", "Insomnia", "OCD"]
 
-mental_df = df[m_all]
-mental_df.round(0).astype(int)
-
-disorder_count = []
-for disorder in m_all:
-    x=0
-    while x !=11:
-        count =  (mental_df[disorder].values == x).sum()
-        disorder_count.append(count)
-        x +=1
-
-labels = ['0','1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-x = np.arange(len(labels))
-width = 0.15
-
-fig, ax = plt.subplots(figsize=(13, 9))
-
-b1 = ax.bar(x-2*width, disorder_count[0:11], width, label="Anxiety", color = 'lightpink')
-b2 = ax.bar(x-width, disorder_count[11:22], width, label="Depression", color = 'cornflowerblue')
-b3 = ax.bar(x, disorder_count[22:33], width, label="Insomnia", color = 'darkmagenta')
-b4 = ax.bar(x+width, disorder_count[33:], width, label="OCD", color = 'orange')
-
-ax.set_ylim([0, 170])
-ax.set_ylabel('Number of Rankings')
-ax.set_xlabel('Ranking')
-ax.set_title('Mental health ranking distribution')
-ax.set_xticks(x, labels)
-ax.legend()
-
-plt.show()
-max(disorder_count)
-for disorder in m_all:
-    d_avg = str(round(df[disorder].mean(), 2))
-    print(disorder + ' average: ' + d_avg)
-anxiety_extreme = df.loc[(df['Anxiety'] > 8)].mean()[1]
-depression_extreme = df.loc[(df['Depression'] > 8)].mean()[1]
-insomnia_extreme = df.loc[(df['Insomnia'] > 8)].mean()[1]
-ocd_extreme = df.loc[(df['OCD'] > 8)].mean()[1]
-
-extreme_means = [anxiety_extreme, depression_extreme, insomnia_extreme, ocd_extreme]
-
-plt.barh(m_all, extreme_means, color=('lightpink', 'cornflowerblue', 'darkmagenta', 'orange'))
-  
-plt.xlabel("Avg hours listened")
-plt.title("Hours listened for individuals with extreme MH rankings")
-plt.xlim(3,5.5)
-plt.show()
-
-anxiety_extreme2 = df.loc[(df['Anxiety'] < 3)].mean()[1]
-depression_extreme2 = df.loc[(df['Depression'] < 3)].mean()[1]
-insomnia_extreme2 = df.loc[(df['Insomnia'] < 3)].mean()[1]
-ocd_extreme2 = df.loc[(df['OCD'] < 3)].mean()[1]
-
-extreme_means = [anxiety_extreme, depression_extreme, insomnia_extreme, ocd_extreme]
-
-plt.barh(m_all, extreme_means, color=('lightpink', 'cornflowerblue', 'darkmagenta', 'orange'))
-  
-plt.xlabel("Avg hours listened")
-plt.title("Hours listened for individuals with low MH rankings")
-plt.xlim(3,4)
-plt.show()
-
-corr_m2 = corr_m.iloc[8: , 8:]
-mask = np.triu(corr_m2)
-
-sns.heatmap(corr_m2, annot=True, mask=mask, cmap = 'YlOrRd')
-plt.show()
-
-plt.figure(figsize=(5,4))
-plt.title('Effects of Music on Mental Health')
-
-effects = df['Music effects'].value_counts()
-effects.plot(kind='pie', colors = ["indianred", "gold", "darkblue"], ylabel= '');
-
-# %% [code] {"tags":[],"cell_id":"12d061e5238445dea3c17d1b8e673461","source_hash":"9f730a46","execution_start":1671339345651,"execution_millis":9,"deepnote_to_be_reexecuted":false,"deepnote_cell_type":"code"}
-effects
-genre = df["Fav genre"].value_counts().loc[lambda x: x>10]
-genre.plot(kind='pie', labeldistance = 1.2, 
-            explode=[0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,], 
-            colors = sns.color_palette('pastel')[0:13])
-
-plt.title('Top genre breakdown')
-plt.ylabel("")
-
-sns.scatterplot(data=df, y="Fav genre", x="Age", alpha = 0.5, marker = "X", color = "sienna")
-plt.title('Age distribution by genre');
-
-
-df.replace(['Video game music'],
-                       ['Video game'], inplace=True)
-
-g_all = df['Fav genre'].unique()
-g_all.sort()
-fg_df = df.groupby(['Fav genre'])
-fg_dist = fg_df['Music effects'].value_counts(ascending=False, normalize=True).tolist()
-
-insert_indices = [5, 8, 11, 13, 14, 17, 20, 23, 26, 28, 29, 32, 38]
-for i in range(len(insert_indices)):
-    fg_dist.insert(insert_indices[i], 0)
-
-imp_dist = fg_dist[0::3]
-no_eff_dist = fg_dist[1::3]
-wors_dist = fg_dist[2::3]
-
-width = 0.22
-
-x = np.arange(len(g_all))
-
-fig, ax = plt.subplots(figsize=(13, 9))
-
-b1 = ax.bar(x-width, imp_dist, width, label="Improve", color = 'indianred')
-b2 = ax.bar(x, no_eff_dist, width, label="No effect", color = 'gold')
-b3 = ax.bar(x+width, wors_dist, width, label="Worsen", color = 'darkblue')
-
-plt.title("Music effects by Favorite Genre")
-ax.set_ylabel('Distribution')
-ax.set_xlabel('Genre')
-ax.set_xticks(x, g_all, rotation = 45)
-ax.legend()
-
-plt.show()
-print(df['BPM'].max())
-print(df['BPM'].min())
-df = df[(df.BPM < 500) & (df.BPM > 20)]
-print(df['BPM'].max())
-print(df['BPM'].min())
-sns.catplot(
-    data=df.sort_values("Fav genre"),
-    x="Fav genre", y="BPM", kind="boxen",
-    height=6, aspect=2,
-    width = 0.5,
-    showfliers=False,
-)
-
-plt.xticks(rotation = 45)
-plt.title('Genre vs BPM')
-plt.ylim(50, 210)
-plt.show()
-
-fig = plt.figure(figsize=(8, 5))
-
-plt.suptitle("BPM vs Mental Health")
-
-y = df["Anxiety"]
-y2 = df["Depression"]
-y3 = df["Insomnia"]
-y4 = df["OCD"]
-x = df["BPM"]
-
-ax = fig.add_subplot(221)
-plt.title('Anxiety')
-plt.xticks([])
-plt.ylabel('Mental health ranking')
-plt.hist2d(x,y, density = True);
-
-
-ax = fig.add_subplot(222)
-plt.title('Depression')
-plt.xticks([])
-plt.hist2d(x,y2, density = True);
-
-ax = fig.add_subplot(223)
-plt.title('Insomnia')
-plt.ylabel('Mental health ranking')
-plt.xlabel('BPM')
-plt.hist2d(x,y3, density = True);
-
-ax = fig.add_subplot(224)
-plt.title('OCD')
-plt.xlabel('BPM')
-plt.hist2d(x,y4, density = True);
-
-df['MH Score'] = df['Anxiety'] + df['Depression'] + df['Insomnia'] + df['OCD']
-df.nsmallest(50, ['MH Score'])['BPM'].mean()
-df.nlargest(50, ['MH Score'])['BPM'].mean()
-import matplotlib.patches as mpatches
-
-i = 11
-
-r_dist = []
-s_dist = []
-n_dist = []
-vf_dist = []
-
-while i != 27:
-    freq_dist = df.iloc[:, i].value_counts().sort_index(ascending=True).tolist()
-    r_dist.append(freq_dist[0])
-    s_dist.append(freq_dist[1])
-    n_dist.append(freq_dist[2])
-    vf_dist.append(freq_dist[3])  
-    
-    i+=1
-
-fig, ax = plt.subplots()
-
-for i in range (0, 16):
-    ax.bar(i, r_dist[i], label='Rare', bottom = vf_dist[i] + s_dist[i], color = "plum")
-    ax.bar(i, s_dist[i], label='Sometimes', bottom = vf_dist[i], color = "mediumpurple")
-    ax.bar(i, n_dist[i], label='Never', bottom=vf_dist[i] + s_dist[i] + r_dist[i], color = "lightpink")
-    ax.bar(i, vf_dist[i], label='Very frequently', color = "navy")
-
-ax.set_title('(In Depth) Genres by Popularity')
-ax.set_xticks([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
-ax.set_xticklabels(g_all)
-plt.xticks(rotation = 45)
-
-patch1 = mpatches.Patch(color='lightpink', label='Never')
-patch2 = mpatches.Patch(color='plum', label='Rarely')
-patch3 = mpatches.Patch(color='mediumpurple', label='Sometimes')
-patch4 = mpatches.Patch(color='navy', label='Very frequently')
-
-plt.legend(handles=[patch1, patch2, patch3, patch4], bbox_to_anchor=(1.05, 1.0), loc='upper left');
-
-# %% [code] {"tags":[],"cell_id":"c51525fb4ca84973a29767e65eef46ce","source_hash":"1c380d8b","execution_start":1671339348904,"execution_millis":300,"deepnote_to_be_reexecuted":false,"deepnote_cell_type":"code"}
-import itertools
-
-med_list = []
-med_list2 = []
-med_list3 = []
-med_list4 = []
-
-df.replace(['Never', 'Rarely', 'Sometimes', 'Very frequently'],
-                        [0, 1, 2, 3], inplace=True)
-
-for i in range (11, 27):
-    freq_genre = df.columns[i]
-    med_list.append(pd.pivot_table(df, values='Anxiety', index=freq_genre, aggfunc="median").values.tolist())
-    med_list2.append(pd.pivot_table(df, values='Depression', index=freq_genre, aggfunc="median").values.tolist())
-    med_list3.append(pd.pivot_table(df, values='Insomnia', index=freq_genre, aggfunc="median").values.tolist())
-    med_list4.append(pd.pivot_table(df, values='OCD', index=freq_genre, aggfunc="median").values.tolist())
-
-def m_vs_gfreq(mlist, fig_name, bd1, bd2):
-
-    r_dist = []
-    s_dist = []
-    n_dist = []
-    vf_dist = []
-
-    for i in range (0, 16):
-        n_dist.append(mlist[i][0])
-        r_dist.append(mlist[i][1])  
-        s_dist.append(mlist[i][2])  
-        vf_dist.append(mlist[i][3])  
-
-    labels = g_all
-    x = np.arange(len(labels))
-    width = 0.15
-
-    fig, ax = plt.subplots(figsize=(10, 4))
-
-    b1 = ax.bar(x-2*width, list(itertools.chain(*n_dist)), width, label="Never", color = 'lightpink')
-    b2 = ax.bar(x-width, list(itertools.chain(*r_dist)), width, label="Rarely", color = 'plum')
-    b3 = ax.bar(x, list(itertools.chain(*s_dist)), width, label="Sometimes", color = 'mediumpurple')
-    b4 = ax.bar(x+width, list(itertools.chain(*vf_dist)), width, label="Very Frequently", color = 'navy')
-
-    ax.set_ylim(bd1, bd2)
-    ax.set_ylabel('Ranking')
-    ax.set_title(fig_name)
-    ax.set_xticks(x, labels)
-    ax.legend(loc='upper left')
-
-    plt.xticks(rotation = 45)
-    plt.show()
-
-m_vs_gfreq(med_list, 'Relation between Anxiety & Genre Frequency', 4, 9)
-m_vs_gfreq(med_list2, 'Relation between Depression & Genre Frequency', 2, 8.5)
-
-fig = sns.lmplot(x ='Frequency [Rock]', y ='Depression', data = df, height=3.5)
-fig.set(ylim=(2.5, 6.5))
-
-# %% [code] {"tags":[],"cell_id":"6cddc63f39b840ba8afb75cd3faef1b0","source_hash":"8e5db98b","execution_start":1671339350631,"execution_millis":424,"deepnote_to_be_reexecuted":false,"deepnote_cell_type":"code"}
-m_vs_gfreq(med_list3, 'Relation between Insomnia & Genre Frequency', 0, 6.5)
-m_vs_gfreq(med_list4, 'Relation between OCD & Genre Frequency', 0,4)
-
-print('Favorite genres of highest combined MH scorers:')
-df.nlargest(60, ['MH Score'])['Fav genre'].value_counts()
-print('Favorite genres of lowest combined MH scorers:')
-df.nsmallest(60, ['MH Score'])['Fav genre'].value_counts()
-
-df.nlargest(1, ['MH Score'])['Fav genre']
-
+df4_country <- df4 %>% 
+  arrange(desc(users))
+
+df4_country %>%
+  ggplot(aes(x = fct_reorder(country, users), y = users)) +
+  geom_col(fill = "#0072B2") +
+  geom_text(aes(label = scales::comma(users), hjust = -0.2), color = "darkblue", size = 3.5) +
+  scale_y_continuous(limits = c(0, 1200), expand = c(0, 0), breaks = seq(0, 1200, 200)) +
+  labs(title = "Countries By Internet Users", subtitle = "Oct 2022",
+       x = "Country",
+       y = "Number of Internet Users (Millions)",
+       caption = "Data Source: Statista") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 18, face = "bold", color = "darkgray"),
+        plot.subtitle = element_text(size = 12, face = "bold", color = "darkgrey"),
+        axis.title = element_text(size = 14, color = "darkgray"),
+        axis.text.x = element_text(size = 12, hjust = 1),
+        axis.text.y = element_text(size = 12, color = "darkgray"),
+        plot.caption = element_text(hjust = 0, color = "darkgray"),
+        panel.grid.major.y = element_line(color = "lightgray")) +
+  coord_flip()
+
+### 2.3 Average Usage Worldwide
+
+library(ggplot2)
+
+avg_time_spent_worldwide %>%
+  ggplot(aes(x = as.numeric(year), y = time)) +
+  geom_line(color = "#0072B2", size = 1.5) +
+  geom_point(color = "#0072B2", size = 3) +
+  geom_text(aes(label = time), vjust = -1.5, color = "#0072B2") +
+  scale_x_continuous(breaks = seq(2012, 2022, 1), limits = c(2012, 2022)) +
+  scale_y_continuous(breaks = seq(0, 150, 10), limits = c(0, 150)) +
+  labs(title = "Average Daily Time Spent On Social Media Worldwide",
+       x = "Year",
+       y = "Minutes",
+       caption = "Data Source: Statista") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold", color = "darkgray"),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12, color = "darkgray"),
+        plot.caption = element_text(hjust = 0, color = "darkgray"),
+        axis.title.x = element_text(size = 14, color = "darkgray"),
+        axis.title.y = element_text(size = 14, color = "darkgray"),
+        panel.grid.major = element_line(color = "lightgray"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        legend.position = "none")
+
+
+
+### 2.4 Users by Age
+
+# reshape data into long format
+#age_data_long <- df3 %>% 
+ # pivot_longer(cols = c(`2013-2019`, `2019-2025`), names_to = "year_range", values_to = "value") %>%
+  #mutate(year_range = str_replace(year_range, "-", " - "))
+
+
+# create bar chart
+age_plot <- ggplot(age_data_long, aes(x = age, y = value, fill = year_range)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  scale_fill_manual(values = c("steelblue", "darkblue"), name = " ", 
+                    labels = c("2013 - 2019", "2019 - 2025")) +
+  labs(title = "Internet Usage by Age Group In India", x = NULL, y = "Percentage", 
+       caption = "Data Source: Statista") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 18, face = "bold", color = "darkslategrey"),
+        axis.text = element_text(size = 12, color = "darkslategrey"),
+        axis.title = element_text(size = 14, color = "darkslategrey"),
+        legend.position = "bottom",
+        panel.grid.major = element_line(color = "lightgrey"),
+        panel.grid.minor = element_blank())
+
+# add data labels to bars
+age_plot +
+  geom_text(aes(label = paste0(value, "%")), 
+            position = position_dodge(width = 1), 
+            vjust = -0.5, color = "black")
+
+# reshape data into long format
+df8 <- df5 %>% 
+  pivot_longer(cols = c("men", "women"), names_to = "gender", values_to = "percentage")
+
+
+class(df8$percentage)
+df8$percentage <- as.numeric(gsub("%", "", df8$percentage))
+colors <- c("#0072B2", "lightblue","darkblue")
+
+### 2.5 Disorders by Gender
+
+ggplot(df8, aes(x = "", y = percentage, fill = disorders)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  facet_wrap(~ gender) +
+  scale_fill_manual(values = colors, labels = c("Stress", "Depression", "Anxiety")) +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(size = 12, hjust = 0.5),
+        legend.title.align = 0.5,
+        legend.text = element_text(size = 11),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.caption = element_text(size = 11, color = "darkgrey", vjust = 0.5)) +
+  geom_text(aes(label = paste0(percentage, "%")), position = position_stack(vjust = 0.5), size = 4, color = "white") +
+  scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
+  labs(title = "Indian Mental Health Disorders by Gender",
+       subtitle = "2021",
+       fill = " ",
+       caption = "Source: Digital Mental Health Innovations in India Report 2021, page 5")
+```
+
+### 2.6 Impact on Youth
+
+
+ggplot(df_long, aes(x = stringr::str_wrap(statement, width = 30), y = value, fill = variable)) +
+  geom_bar(stat = "identity") +
+  scale_fill_viridis_d(option = "D") +
+  coord_flip() +
+  labs(title = "Impact of Instagram on Young Adults",
+       subtitle = "Survey 2020",
+       x = "", y = "Percentage of Responses", fill = "",
+       caption = "Data Source: The Impact of Instagram on Young Adults Social Comparison, 
+Colourism and Mental Health: Indian Perspective\nInternational Journal of Information Management Data Insights\nVolume 2, 
+Issue 1, April 2022\nSurvey data collected between 23 September 2020 to 05 October 2020") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 0, hjust = 1,
+                                   vjust = 0.5,
+                                   margin = margin(t = 0, r = 0, b = 30, l = 0)),
+        plot.caption = element_text(size = 8)) +
+  geom_text(aes(label = paste0(sprintf("%.2f", value*1),"%")),
+            position = position_stack(vjust = 0.5), size = 3, color = "white")
+
+### 2.7 Effective Actions
+
+df_long_response <- melt(df7, id.vars = "actions")
+
+# Add percentage labels to the bars
+df_long_response <- df_long_response %>%
+  group_by(actions, variable) %>%
+  mutate(percent = paste0(value, "%"))
+
+# Create a stacked bar chart with viridis color palette
+ggplot(df_long_response, aes(x = actions, y = value, fill = variable)) +
+  geom_col(position = "stack", color = "white", width = 0.8) +
+  scale_fill_viridis_d(option = "E") +
+  coord_flip() +
+  geom_text(aes(label = percent), position = position_stack(vjust = 0.5), size = 4, color = "white") +
+  labs(title = "Effectiveness of Mental Health Actions - 2020",
+       subtitle = "Percentage of respondents who found the actions helpful or not helpful",
+       y = "Percentage",
+       x = " ",
+       fill = "",
+       caption = "Source: Wellcome Global Monitor 2020: The role of science in mental health, page 29") +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        plot.caption = element_text(size = 10, color = "slategray")) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 100))
